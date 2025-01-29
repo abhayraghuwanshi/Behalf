@@ -43,6 +43,6 @@ public class ChatService {
     }
 
     public List<QuestSession> fetchChats(Long userId){
-        return chatSessionRepository.findAllByQuestAcceptorOrQuestCreatorId(userId, userId);
+        return chatSessionRepository.findAllByQuestAcceptorIdOrQuestCreatorId(userId, userId);
     }
 }

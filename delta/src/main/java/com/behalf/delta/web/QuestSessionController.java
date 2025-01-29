@@ -1,12 +1,12 @@
 package com.behalf.delta.web;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.behalf.delta.entity.QuestMetadata;
 import com.behalf.delta.entity.dto.QuestDto;
 import com.behalf.delta.service.QuestService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +18,8 @@ import com.behalf.delta.service.ChatService;
 
 
 @RestController
-@RequestMapping("/api/quest/session")
+@RequestMapping("/api/quests/sessions")
+@Slf4j
 public class QuestSessionController {
     private final ChatService chatService;
 
@@ -30,13 +31,13 @@ public class QuestSessionController {
     }
 
     @PostMapping() // create new chat session
-    public ChatSessionDTO createChatSession(@RequestBody QuestSession sessionRequest,  @AuthenticationPrincipal OidcUser user) {
+    public ChatSessionDTO createChatSession(@RequestBody QuestSession sessionRequest) {
         QuestSession questSession = chatService.createChatSession(sessionRequest);
         return ChatSessionDTO.builder()
                 .questStatus(questSession.getQuestStatus())
                 .questId(questSession.getQuestId())
                 .questCreatorId(questSession.getQuestCreatorId())
-                .questAcceptor(questSession.getQuestAcceptor()).build();
+                .questAcceptorId(questSession.getQuestAcceptorId()).build();
     }
 
     @PostMapping("/{sessionId}/messages") // post message per session
@@ -59,20 +60,36 @@ public class QuestSessionController {
     }
 
     @GetMapping("/{userID}")
-    public QuestDto fetchChatSession(@PathVariable Long userID){
-        Map<Long,List<ChatSessionDTO>> chats =  chatService.fetchChats(userID).stream().map(questSession ->
-                ChatSessionDTO.builder()
+    public QuestDto fetchChatSession(@PathVariable Long userID) {
+        // Step 1: Fetch chat sessions for the user
+        Map<Long, List<ChatSessionDTO>> chats = chatService.fetchChats(userID).stream()
+                .map(questSession -> ChatSessionDTO.builder()
                         .questStatus(questSession.getQuestStatus())
                         .questId(questSession.getQuestId())
                         .questCreatorId(questSession.getQuestCreatorId())
                         .id(questSession.getId())
-                        .questAcceptor(questSession.getQuestAcceptor()).build()
-        ).collect(Collectors.groupingBy(ChatSessionDTO::getQuestId, Collectors.toList()));
+                        .questAcceptorId(questSession.getQuestAcceptorId())
+                        .build())
+                .collect(Collectors.groupingBy(ChatSessionDTO::getQuestId, Collectors.toList()));
 
-        List<QuestMetadata> metadataList = questService.fetchQuest(chats.keySet().stream().toList());
+        // Step 2: Fetch quests where the user has active chat sessions
+        List<QuestMetadata> metadataList = new ArrayList<>();
+        metadataList.addAll(questService.fetchQuest(new ArrayList<>(chats.keySet())));
+
+        log.info("metadataList" + metadataList.toString());
+
+
+        // Step 3: Fetch all quests created by the user (handling possible null)
+        List<QuestMetadata> createdQuests = Optional.ofNullable(questService.fetchQuestByCreatorId(userID))
+                .orElse(Collections.emptyList()) // Ensure it's never null
+                .stream()
+                .filter(q -> !chats.containsKey(q.getId())) // Exclude already fetched quests
+                .toList();
+
+        // Step 4: Merge all fetched quests
+        metadataList.addAll(createdQuests);
 
         return new QuestDto(metadataList, chats);
-
     }
 
 

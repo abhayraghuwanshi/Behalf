@@ -20,7 +20,7 @@ public class ChatSessionDTO {
 
     private String questStatus;
 
-    private Long questAcceptor;
+    private Long questAcceptorId;
     private Long questCreatorId;
 
 

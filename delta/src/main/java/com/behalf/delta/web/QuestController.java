@@ -2,19 +2,16 @@ package com.behalf.delta.web;
 
 import java.util.List;
 
-import com.behalf.delta.entity.QuestAgreement;
-import com.behalf.delta.exception.DatabaseException;
-import com.behalf.delta.exception.WorkflowException;
+
+import com.behalf.delta.entity.QuestSession;
+
 import com.behalf.delta.service.QuestService;
-import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired; // Add this import
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -60,7 +57,7 @@ public class QuestController {
     }
 
     @PostMapping("/agreement")
-    public ResponseEntity<String> assignedQuest(@RequestBody @Valid QuestAgreement questAgreement) throws ResponseStatusException, ValidationException {
+    public ResponseEntity<String> assignedQuest(@RequestBody @Valid QuestSession questAgreement) throws ResponseStatusException, ValidationException {
             questService.assignQuest(questAgreement);
             return ResponseEntity.ok("Success");
     }

@@ -1,14 +1,16 @@
 package com.behalf.delta.service;
 
-import com.behalf.delta.entity.QuestAgreement;
+
+import com.behalf.delta.entity.Message;
 import com.behalf.delta.entity.QuestMetadata;
+import com.behalf.delta.entity.QuestSession;
 import com.behalf.delta.exception.DatabaseException;
 import com.behalf.delta.exception.WorkflowException;
-import com.behalf.delta.repo.QuestAgreementRepo;
+import com.behalf.delta.repo.ChatSessionRepository;
+import com.behalf.delta.repo.MessageRepository;
 import com.behalf.delta.repo.QuestRepository;
 import com.behalf.delta.temporal.WorkFlow;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import io.temporal.client.WorkflowOptions;
 import io.temporal.serviceclient.WorkflowServiceStubs;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -35,7 +38,11 @@ public class QuestService {
     private QuestRepository questRepository;
 
     @Autowired
-    private QuestAgreementRepo questAgreementRepo;
+    private ChatSessionRepository chatSessionRepository;
+
+    @Autowired
+    private MessageRepository messageRepository;
+
 
     public QuestMetadata placeOrder(QuestMetadata quest) {
         try {
@@ -93,15 +100,22 @@ public class QuestService {
         return workflowClient.newWorkflowStub(WorkFlow.class, options);
     }
 
-    public void assignQuest(QuestAgreement questAgreement){
+    public void assignQuest(QuestSession questSession){
+//        try {
+//            WorkFlow workflow = workflowClient.newWorkflowStub(WorkFlow.class, "Order_" + questAgreement.getQuestId());
+//            workflow.signalQuestHunterAssigned();
+//        } catch (Exception e){
+//            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, e.getMessage());
+//        }
         try {
-            WorkFlow workflow = workflowClient.newWorkflowStub(WorkFlow.class, "Order_" + questAgreement.getQuestId());
-            workflow.signalQuestHunterAssigned();
-        } catch (Exception e){
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, e.getMessage());
-        }
-        try {
-            questAgreementRepo.saveAndFlush(questAgreement);
+             QuestSession qs = chatSessionRepository.saveAndFlush(questSession);
+            messageRepository.save(Message.builder()
+                    .sender(questSession.getQuestAcceptorId().toString())
+                    .message(questSession.getQuestRequestMsg())
+                    .recipient(questSession.getQuestAcceptorId().toString())
+                            .questSession(qs)
+                    .timestamp(LocalDateTime.now()).build());
+
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database Exception has occur");
         }
@@ -126,6 +140,10 @@ public class QuestService {
 
     public List<QuestMetadata> fetchQuest(List<Long> id){
         return questRepository.findAllById(id);
+    }
+
+    public List<QuestMetadata> fetchQuestByCreatorId(Long id){
+        return questRepository.findAllByQuestCreatorId(id);
     }
 
 

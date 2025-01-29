@@ -9,6 +9,6 @@ import java.util.List;
 @Repository
 public interface ChatSessionRepository extends JpaRepository<QuestSession, Long> {
 
-    List<QuestSession> findAllByQuestAcceptorOrQuestCreatorId(Long id, Long creatorId);
+    List<QuestSession> findAllByQuestAcceptorIdOrQuestCreatorId(Long id, Long creatorId);
 
 }
