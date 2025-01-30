@@ -1,0 +1,6 @@
+[submodule "Behalf-Back"]
+	path = Behalf-Back
+	url = https://github.com/abhayraghuwanshi/Behalf-Back.git
+[submodule "Behalf-Front"]
+	path = Behalf-Front
+	url = https://github.com/abhayraghuwanshi/Behalf-Front.git
