@@ -1,20 +1,21 @@
 package com.behalf.delta.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.extern.jackson.Jacksonized;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Data
-@Entity
+import java.io.Serializable;
+
+@Getter
 @Builder
-public class UserInformation {
+@NoArgsConstructor
+@Entity
+public class UserInformation implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,4 +24,17 @@ public class UserInformation {
     private String firstName;
     private String lastName;
     private String picture;
+
+    @JsonCreator
+    public UserInformation(@JsonProperty("id") Long id,
+                           @JsonProperty("email") String email,
+                           @JsonProperty("firstName") String firstName,
+                           @JsonProperty("lastName") String lastName,
+                           @JsonProperty("picture") String picture) {
+        this.id = id;
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.picture = picture;
+    }
 }

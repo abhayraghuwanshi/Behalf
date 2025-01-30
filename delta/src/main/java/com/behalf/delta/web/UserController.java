@@ -5,13 +5,15 @@ import com.behalf.delta.entity.UserInformation;
 import com.behalf.delta.repo.UserInformationRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.parameters.P;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -23,8 +25,11 @@ public class UserController {
     private final UserInformationRepo userInformationRepo;
 
     @GetMapping("/me")
-    public ResponseEntity<UserInformation> getUserInfo(@AuthenticationPrincipal OidcUser oidcUser) {
-
+    @Cacheable(value = "userInfo", key = "#oidcUser != null ? #oidcUser.email : 'unknown'",  unless = "#result == null")
+    public UserInformation getUserInfo(@AuthenticationPrincipal OidcUser oidcUser) {
+        if (oidcUser == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
+        }
         Optional<UserInformation> userInformationOptional = userInformationRepo.findByEmail(oidcUser.getEmail());
 
         UserInformation userInfo;
@@ -37,6 +42,6 @@ public class UserController {
             userInfo = userInformationOptional.get();
         }
 
-        return ResponseEntity.ok(userInfo);
+        return userInfo;
     }
 }
