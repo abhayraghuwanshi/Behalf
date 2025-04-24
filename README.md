@@ -1,4 +1,4 @@
-# 📦 Behalf
+# 📦 Behalf [Development in progress]
 
 [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)]()
