@@ -1,6 +1,5 @@
 # 📦 Behalf [Development in progress]
 
-[![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![Java](https://img.shields.io/badge/backend-Java%2017-blue)]()
 [![React](https://img.shields.io/badge/frontend-React.js-lightgrey)]()
